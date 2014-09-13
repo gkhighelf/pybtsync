@@ -31,7 +31,7 @@ class BTSync_process():
         if api_key is None:
             api_key = os.environ['PYBTSYNC_APIKEY']
         if btsync_exec_folder is None:
-            self.btsync_exec_folder = tempfile.mkdtemp()
+            btsync_exec_folder = tempfile.mkdtemp()
         if btsync_app is None:
                 if btsync_exec_folder is None:
                     btsync_app = self.download_btsync(self.btsync_exec_folder)
@@ -40,7 +40,7 @@ class BTSync_process():
                     btsync_app = self.download_btsync(btsync_exec_folder)
         
         [btsync_conf_file,
-         address, port, login, password] = self.write_conf_file(self.btsync_exec_folder,
+         address, port, login, password] = self.write_conf_file(btsync_exec_folder,
                                                                 address, port, login, password, api_key)
         self.__address = address
         self.__port = port
