@@ -24,14 +24,16 @@ except:
     pass
 
 
-class BTSync_process():
+class BTSync_process(object):
     def __init__(self, api_key=None,
                  btsync_exec_folder=None, btsync_app=None, 
                  address='127.0.0.1', port=None, login=None, password=None):
         if api_key is None:
             api_key = os.environ['PYBTSYNC_APIKEY']
         if btsync_exec_folder is None:
-            btsync_exec_folder = tempfile.mkdtemp()
+            self.btsync_exec_folder = tempfile.mkdtemp()
+        else:
+            self.btsync_exec_folder = btsync_exec_folder
         if btsync_app is None:
                 if btsync_exec_folder is None:
                     btsync_app = self.download_btsync(self.btsync_exec_folder)
@@ -150,17 +152,19 @@ class BTSync_process():
             self.btsync_process = subprocess.Popen([btsync_app, '--config', btsync_conf_file])
         #TODO: put some check if it started correctly
 
-class BTSync():
+class BTSync(object):
     def __init__(self, address, port, login, password):
         self._address = address
         self._port = port
         self._login = login
         self._password = password
         self.preferences = BTSync_preferences(address, port, login, password)
-
-    @property        
-    def folders(self):
-        return self._request_function('get_folders')
+ 
+    def get_folders(self,secret=None):
+        arguments = ''
+        if secret is not None:
+            arguments = 'secret=' + secret
+        return self._request_function('get_folders',arguments = arguments)
         
     def add_folder(self, folder_path, secret=None, selective_sync=0):
         arguments = 'dir=' + folder_path
@@ -215,22 +219,20 @@ class BTSync():
         arguments = 'secret=' + secret
         arguments = arguments + '&hosts=' + ",".join(hosts)
         return self._request_function('set_folder_hosts', arguments = arguments)
-    
-        
-    @property
-    def os(self):
+       
+    def get_os(self):
         return self._request_function('get_os', key='os')
 
-    @property
-    def version(self):
+    def get_version(self):
         return self._request_function('get_version', key='version')
 
-    @property
-    def download_speed(self):
+    def get_speed(self):
+        return self._request_function('get_speed')
+    
+    def get_download_speed(self):
         return self._request_function('get_speed', key='download')    
 
-    @property
-    def upload_speed(self):
+    def get_upload_speed(self):
         return self._request_function('get_speed', key='upload')
 
     def shutdown(self):
@@ -239,12 +241,12 @@ class BTSync():
     def _request_function(self, method_name, arguments='', key=None):
         URL = 'http://' + self._address + ':' + self._port +'/api?method=' + method_name + '&' + arguments
         request = requests.get(URL, auth=(self._login, self._password))
-        request_data = eval(request.text)
+        request_data = request.json()
         if key is not None:
             return request_data[key]
         return request_data
 
-class BTSync_preferences():
+class BTSync_preferences(object):
     def __init__(self, address, port, login, password):
         self._address = address
         self._port = port
@@ -289,7 +291,7 @@ class BTSync_preferences():
     def _request_function(self, method_name, arguments='', key=None):
         URL = 'http://' + self._address + ':' + self._port +'/api?method=' + method_name + '&' + arguments
         request = requests.get(URL, auth=(self._login, self._password))
-        request_data = eval(request.text)
+        request_data = request.json()
         if key is not None:
             return request_data[key]
         return request_data
