@@ -1,20 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from setuptools import setup, find_packages
+from setuptools import setup
 
 setup(
     name = "pybtsync",
-    version = "0.0.2",
+    version = "0.0.3",
     description = "A Python module for the BitTorrent Sync API.",
-    long_description = open('README.rst').readline(),
+    long_description = "A Python module for the BitTorrent Sync API.",
     author = "Tiago Macarios",
     author_email = "tiagomacarios <at> the google email",
     url = "https://github.com/tiagomacarios/pybtsync",
     download_url = "https://github.com/tiagomacarios/pybtsync",
-    packages = find_packages(), #['pybtsync',],
-    install_requires = ['requests'],
-    license = open('LICENSE').readline(),
+    py_modules = ['pybtsync'],
+    scripts = ['pbts'],
+    install_requires = ['requests', 'docopt'],
+    license = "MIT",
     keywords = "bittorrent sync api",
     classifiers = [ "Development Status :: 3 - Alpha",
                     "Environment :: Console",

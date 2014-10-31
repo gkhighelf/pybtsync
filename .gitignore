@@ -2,7 +2,6 @@
 .project
 .pydevproject
 .settings
-MANIFEST
 __pycache__
 docs/build/
 pybtsync.egg-info/
