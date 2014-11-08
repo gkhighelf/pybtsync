@@ -13,7 +13,6 @@ import tempfile
 import uuid
 
 # Third party imports
-#import docopt # https://github.com/docopt/docopt
 import requests # https://github.com/kennethreitz/requests
 
 # This is for debbuging purposes only
@@ -298,7 +297,9 @@ class BTSyncProcess(object):
         :attribute btsync_process: The sync process ``subprocess.Popen`` object.
         """
         if platform.system() == 'Windows': 
-            self.btsync_process = subprocess.Popen([btsync_app, '/config', btsync_conf_file])
+            cmd = subprocess.list2cmdline([btsync_app, '/config', btsync_conf_file])
+            cmd = 'start "" /b ' + cmd
+            os.system(cmd)
         elif platform.system() == 'Linux': # On linux forces the 'nodaemon' switch to prevent forking
             self.btsync_process = subprocess.Popen([btsync_app, '--config', btsync_conf_file])
         else:
@@ -401,6 +402,8 @@ class BTSync(_BTSyncConnect):
         :type selective_sync: str.
          
         """
+        if secret == '':
+            secret =  self.get_secrets()['read_write']
         force = 1 
         return self._request_function(inspect.stack()[0][3], locals())
 
@@ -511,7 +514,7 @@ class BTSync(_BTSyncConnect):
         :rtype: Dict.
         """              
         params = locals()
-        keys = params.keys()
+        keys = list(params.keys())
         for key in keys:
             if params[key] is None:
                 params.pop(key)
@@ -572,7 +575,7 @@ class BTSync(_BTSyncConnect):
         :rtype: Dict.
         """ 
         params = locals()
-        keys = params.keys()
+        keys = list(params.keys())
         for key in keys:
             if params[key] is None:
                 params.pop(key)

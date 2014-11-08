@@ -2,24 +2,126 @@
 """pbts
 
 Usage:
-    pbts get_folders [secret]
-    pbts add_folder <dir> <secret> [selective_sync]
+    pbts get_folders [<secret>]
+    pbts add_folder <dir> <secret> [--selective_sync=<True/False>]
     pbts remove_folder <secret>
-    pbts get_files <secret> [path]
+    pbts get_files <secret> [<path>]
     pbts set_file_prefs <secret> <path> <download>
     pbts get_folder_peers <secret>
-    pbts get_secrets [secret] [type]
-    pbts get_folder_prefs [secret]
-    pbts set_folder_prefs [secret] --search_lan=, use_dht=None, use_hosts=None, use_relay_server=None, <use_sync_trash> <use_tracker>
-    pbts get_folder_hosts [secret]
-    pbts set_folder_hosts [secret] [hosts]
-    pbts get_prefs
-    pbts set_prefs
+    pbts get_secrets [<secret>] [<type>]
+    pbts get_folder_prefs <secret> [--pref=<pref>]
+    pbts set_folder_prefs <secret> [--search_lan=<True/False>]
+                                   [--use_dht=<True/False>]
+                                   [--use_hosts=<True/False>]
+                                   [--use_relay_server=<True/False>]
+                                   [--use_sync_trash=<True/False>]
+                                   [--use_tracker=<True/False>]
+    pbts get_folder_hosts <secret>
+    pbts set_folder_hosts <secret> <hosts>
+    pbts get_prefs [--pref=<pref>]
+    pbts set_prefs [--device_name=<name>]
+                   [--lan_use_tcp=<True/False>]
+                   [--disk_low_priority=<True/False>]
+                   [--folder_rescan_interval=<600>]
+                   [--lan_encrypt_data=<True/False>]
+                   [--lang"=<-1>]
+                   [--listening_port=<port_number>]
+                   [--max_file_size_diff_for_patching=<1000>] 
+                   [--max_file_size_for_versioning=<1000>]
+                   [--download_limit=<0>]
+                   [--upload_limit=<0>]
+                   [--use_upnp=<True/False>]
+                   [--rate_limit_local_peers=<True/False>]
+                   [--recv_buf_size=<10>]
+                   [--send_buf_size=<10>]
+                   [--sync_max_time_diff=<600>]
+                   [--sync_trash_ttl=<30>]
     pbts get_os
     pbts get_version
     pbts get_speed
     pbts shutdown
 """
 
-def a():
-    pass
+# Standard library imports
+import difflib
+import inspect
+import json
+import os
+import platform
+
+# Third party imports
+import docopt # https://github.com/docopt/docopt
+
+import pybtsync
+
+def get_btsync():
+    """
+    """
+    
+    # checks if current executing platform has a proper configuration
+    try:
+        current_os_data = pybtsync.all_oses_data[platform.system()]
+    except:
+            raise(NotImplementedError)
+    
+    
+    application_folder = current_os_data['application_folder']
+    pbts_settings_file = os.path.join(application_folder, 'pbts')
+    try:
+        with open(pbts_settings_file, 'r') as pbts_fp:
+            pbts_settings = json.load(pbts_fp)
+        
+        address = pbts_settings['webui']['listen'].split(':')[0]
+        port = pbts_settings['webui']['listen'].split(':')[1]
+        login = pbts_settings['webui']['login']
+        password = pbts_settings['webui']['password']
+        
+        bts = pybtsync.BTSync(address, port, login, password)
+        bts.get_version()
+        
+    except:
+        pybtsync.write_conf_file( conf_file_location=pbts_settings_file )
+        pbts_p = pybtsync.BTSyncProcess( btsync_conf_file=pbts_settings_file )
+        pbts_p.keep_alive = 'True'
+        bts = pbts_p.BTSync()
+
+    return bts
+
+
+if __name__ == "__main__":
+    arguments = docopt.docopt(__doc__)
+
+    bts = get_btsync()
+
+    command = [key for key, value in arguments.items() if value is True][0]
+    func = bts.__getattribute__(command)
+    func_args = {}
+    for expected_argument in inspect.getargspec(func)[0][1:]:
+        probable_key = difflib.get_close_matches(expected_argument, arguments.keys(), 1)[0]
+        func_args[expected_argument] = arguments[probable_key]
+    
+    data = func(**func_args)
+    try:
+        data = json.dumps(data, indent=4, sort_keys=True)
+    except:
+        pass
+    print(data)    
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+            
+    
+    
+    
+    
