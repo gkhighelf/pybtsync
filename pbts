@@ -56,6 +56,8 @@ import pybtsync
 
 def get_btsync():
     """
+    Loads the currently running pbts sync instance settings. If no instance is running then
+    It will create a new one.
     """
     
     # checks if current executing platform has a proper configuration
@@ -64,22 +66,26 @@ def get_btsync():
     except:
             raise(NotImplementedError)
     
-    
+    # assembles the settings file folder
     application_folder = current_os_data['application_folder']
     pbts_settings_file = os.path.join(application_folder, 'pbts')
     try:
+        # opens the settings folder
         with open(pbts_settings_file, 'r') as pbts_fp:
             pbts_settings = json.load(pbts_fp)
         
+        # parses the settings folder for the authentication data
         address = pbts_settings['webui']['listen'].split(':')[0]
         port = pbts_settings['webui']['listen'].split(':')[1]
         login = pbts_settings['webui']['login']
         password = pbts_settings['webui']['password']
         
+        # checks if all is good
         bts = pybtsync.BTSync(address, port, login, password)
         bts.get_version()
         
     except:
+        # is any of the above fails, admit that the process is not running and start a new one
         pybtsync.write_conf_file( conf_file_location=pbts_settings_file )
         pbts_p = pybtsync.BTSyncProcess( btsync_conf_file=pbts_settings_file )
         pbts_p.keep_alive = 'True'
@@ -89,18 +95,24 @@ def get_btsync():
 
 
 if __name__ == "__main__":
+    # parses the command line
     arguments = docopt.docopt(__doc__)
 
+    # gets the sync instance
     bts = get_btsync()
 
+    # finds the command that was passed as an argument
     command = [key for key, value in arguments.items() if value is True][0]
+    # finds the matching function for that command
     func = bts.__getattribute__(command)
+    # assembles the function arguments by parsing the arguments and mathcing then to the function's 
     func_args = {}
     for expected_argument in inspect.getargspec(func)[0][1:]:
         probable_key = difflib.get_close_matches(expected_argument, arguments.keys(), 1)[0]
         func_args[expected_argument] = arguments[probable_key]
-    
+    # finally runs the function
     data = func(**func_args)
+    # handle outputs
     try:
         data = json.dumps(data, indent=4, sort_keys=True)
     except:
