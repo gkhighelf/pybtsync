@@ -172,6 +172,7 @@ class BTSync(object):
             arguments = arguments + '&secret=' + secret
         if selective_sync != 0:
             arguments = arguments + '&selective_sync=' + str(selective_sync)
+        arguments += '&force=1'
         return self._request_function('add_folder', arguments = arguments)
         
     def remove_folder(self, secret):
